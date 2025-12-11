@@ -3,10 +3,11 @@
 <head>
     <title>My Games</title>
     <style>
-        body { text-align: center; font-family: Arial; }
-        canvas { border: 2px solid black; margin: 20px; display: block; margin-left: auto; margin-right: auto; }
+        body { text-align: center; font-family: Arial; background: #111; color: #fff; }
+        canvas { border: 2px solid white; margin: 20px; display: block; margin-left: auto; margin-right: auto; background: #000; }
         h1 { margin-top: 30px; }
         button { padding: 10px 20px; margin: 10px; font-size: 16px; cursor: pointer; }
+        .close-btn { background: red; color: #fff; border: none; }
     </style>
 </head>
 <body>
@@ -17,13 +18,35 @@
 
     <div id="gameContainer">
         <canvas id="pong" width="400" height="300" style="display:none;"></canvas>
+        <button id="closePong" class="close-btn" style="display:none;" onclick="closeGame('pong')">Close Pong</button>
+
         <canvas id="snake" width="400" height="400" style="display:none;"></canvas>
+        <button id="closeSnake" class="close-btn" style="display:none;" onclick="closeGame('snake')">Close Snake</button>
     </div>
 
     <script>
         function showGame(game) {
-            document.getElementById('pong').style.display = game === 'pong' ? 'block' : 'none';
-            document.getElementById('snake').style.display = game === 'snake' ? 'block' : 'none';
+            // Hide both first
+            document.getElementById('pong').style.display = 'none';
+            document.getElementById('snake').style.display = 'none';
+            document.getElementById('closePong').style.display = 'none';
+            document.getElementById('closeSnake').style.display = 'none';
+
+            // Show selected
+            if(game === 'pong'){
+                document.getElementById('pong').style.display = 'block';
+                document.getElementById('closePong').style.display = 'inline-block';
+            }
+            if(game === 'snake'){
+                document.getElementById('snake').style.display = 'block';
+                document.getElementById('closeSnake').style.display = 'inline-block';
+            }
+        }
+
+        function closeGame(game){
+            document.getElementById(game).style.display = 'none';
+            if(game === 'pong') document.getElementById('closePong').style.display = 'none';
+            if(game === 'snake') document.getElementById('closeSnake').style.display = 'none';
         }
 
         // -------- PONG GAME --------
@@ -37,6 +60,8 @@
 
         function pongDraw() {
             pongCtx.clearRect(0,0,400,300);
+
+            pongCtx.fillStyle = 'white';
 
             // Draw paddles
             pongCtx.fillRect(0,paddle1Y,paddleWidth,paddleHeight);
@@ -64,10 +89,12 @@
         setInterval(pongDraw, 20);
 
         document.addEventListener('keydown', e => {
-            if(e.key === 'ArrowUp') paddle1Y -= 10;
-            if(e.key === 'ArrowDown') paddle1Y += 10;
-            if(paddle1Y < 0) paddle1Y = 0;
-            if(paddle1Y > 300-paddleHeight) paddle1Y = 300-paddleHeight;
+            if(document.getElementById('pong').style.display === 'block'){
+                if(e.key === 'ArrowUp') paddle1Y -= 10;
+                if(e.key === 'ArrowDown') paddle1Y += 10;
+                if(paddle1Y < 0) paddle1Y = 0;
+                if(paddle1Y > 300-paddleHeight) paddle1Y = 300-paddleHeight;
+            }
         });
 
         // -------- SNAKE GAME --------
@@ -80,43 +107,47 @@
         let dx = snakeSize, dy = 0;
 
         function snakeDraw() {
-            snakeCtx.clearRect(0,0,400,400);
+            if(document.getElementById('snake').style.display === 'block'){
+                snakeCtx.clearRect(0,0,400,400);
 
-            // Draw food
-            snakeCtx.fillStyle = 'red';
-            snakeCtx.fillRect(food.x, food.y, snakeSize, snakeSize);
+                // Draw food
+                snakeCtx.fillStyle = 'red';
+                snakeCtx.fillRect(food.x, food.y, snakeSize, snakeSize);
 
-            // Move snake
-            let head = {x: snake[0].x + dx, y: snake[0].y + dy};
-            snake.unshift(head);
+                // Move snake
+                let head = {x: snake[0].x + dx, y: snake[0].y + dy};
+                snake.unshift(head);
 
-            // Eat food
-            if(head.x === food.x && head.y === food.y){
-                food = {x: Math.floor(Math.random()*20)*snakeSize, y: Math.floor(Math.random()*20)*snakeSize};
-            } else {
-                snake.pop();
-            }
+                // Eat food
+                if(head.x === food.x && head.y === food.y){
+                    food = {x: Math.floor(Math.random()*20)*snakeSize, y: Math.floor(Math.random()*20)*snakeSize};
+                } else {
+                    snake.pop();
+                }
 
-            // Draw snake
-            snakeCtx.fillStyle = 'green';
-            for(let part of snake){
-                snakeCtx.fillRect(part.x, part.y, snakeSize, snakeSize);
-            }
+                // Draw snake
+                snakeCtx.fillStyle = 'green';
+                for(let part of snake){
+                    snakeCtx.fillRect(part.x, part.y, snakeSize, snakeSize);
+                }
 
-            // Collision with walls or self
-            if(head.x < 0 || head.x >= 400 || head.y < 0 || head.y >= 400 || snake.slice(1).some(p=>p.x===head.x && p.y===head.y)){
-                snake = [{x:200,y:200}];
-                dx = snakeSize; dy = 0;
+                // Collision with walls or self
+                if(head.x < 0 || head.x >= 400 || head.y < 0 || head.y >= 400 || snake.slice(1).some(p=>p.x===head.x && p.y===head.y)){
+                    snake = [{x:200,y:200}];
+                    dx = snakeSize; dy = 0;
+                }
             }
         }
 
         setInterval(snakeDraw, 100);
 
         document.addEventListener('keydown', e => {
-            if(e.key === 'ArrowUp' && dy === 0){ dx=0; dy=-snakeSize; }
-            if(e.key === 'ArrowDown' && dy === 0){ dx=0; dy=snakeSize; }
-            if(e.key === 'ArrowLeft' && dx === 0){ dx=-snakeSize; dy=0; }
-            if(e.key === 'ArrowRight' && dx === 0){ dx=snakeSize; dy=0; }
+            if(document.getElementById('snake').style.display === 'block'){
+                if(e.key === 'ArrowUp' && dy === 0){ dx=0; dy=-snakeSize; }
+                if(e.key === 'ArrowDown' && dy === 0){ dx=0; dy=snakeSize; }
+                if(e.key === 'ArrowLeft' && dx === 0){ dx=-snakeSize; dy=0; }
+                if(e.key === 'ArrowRight' && dx === 0){ dx=snakeSize; dy=0; }
+            }
         });
     </script>
 </body>
