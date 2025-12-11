@@ -1,33 +1,123 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Audio Test</title>
+    <title>My Games</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin-top: 100px;
-        }
-        button {
-            padding: 15px 30px;
-            font-size: 18px;
-            margin: 10px;
-            cursor: pointer;
-        }
+        body { text-align: center; font-family: Arial; }
+        canvas { border: 2px solid black; margin: 20px; display: block; margin-left: auto; margin-right: auto; }
+        h1 { margin-top: 30px; }
+        button { padding: 10px 20px; margin: 10px; font-size: 16px; cursor: pointer; }
     </style>
 </head>
 <body>
+    <h1>My Games</h1>
 
-    <h1>working!</h1>
-    <h2>Music Player</h2>
+    <button onclick="showGame('pong')">Play Pong</button>
+    <button onclick="showGame('snake')">Play Snake</button>
 
-    <!-- Audio object -->
-    <audio id="music" src="music.mp3"></audio>
+    <div id="gameContainer">
+        <canvas id="pong" width="400" height="300" style="display:none;"></canvas>
+        <canvas id="snake" width="400" height="400" style="display:none;"></canvas>
+    </div>
 
-    <!-- Buttons -->
-    <button onclick="document.getElementById('music').play()">Play</button>
-    <button onclick="document.getElementById('music').pause()">Pause</button>
-    <button onclick="document.getElementById('music').currentTime = 0">Restart</button>
+    <script>
+        function showGame(game) {
+            document.getElementById('pong').style.display = game === 'pong' ? 'block' : 'none';
+            document.getElementById('snake').style.display = game === 'snake' ? 'block' : 'none';
+        }
 
+        // -------- PONG GAME --------
+        const pongCanvas = document.getElementById('pong');
+        const pongCtx = pongCanvas.getContext('2d');
+
+        let paddleWidth = 10, paddleHeight = 60;
+        let ballSize = 10;
+        let paddle1Y = 120, paddle2Y = 120;
+        let ballX = 200, ballY = 150, ballSpeedX = 3, ballSpeedY = 3;
+
+        function pongDraw() {
+            pongCtx.clearRect(0,0,400,300);
+
+            // Draw paddles
+            pongCtx.fillRect(0,paddle1Y,paddleWidth,paddleHeight);
+            pongCtx.fillRect(390,paddle2Y,paddleWidth,paddleHeight);
+
+            // Draw ball
+            pongCtx.fillRect(ballX,ballY,ballSize,ballSize);
+
+            // Move ball
+            ballX += ballSpeedX;
+            ballY += ballSpeedY;
+
+            // Ball collision with top/bottom
+            if(ballY <= 0 || ballY >= 300-ballSize) ballSpeedY = -ballSpeedY;
+
+            // Ball collision with paddles
+            if(ballX <= paddleWidth && ballY + ballSize >= paddle1Y && ballY <= paddle1Y + paddleHeight) ballSpeedX = -ballSpeedX;
+            if(ballX >= 390-paddleWidth && ballY + ballSize >= paddle2Y && ballY <= paddle2Y + paddleHeight) ballSpeedX = -ballSpeedX;
+
+            // Simple AI for paddle 2
+            if(ballY > paddle2Y + paddleHeight/2) paddle2Y += 3;
+            if(ballY < paddle2Y + paddleHeight/2) paddle2Y -= 3;
+        }
+
+        setInterval(pongDraw, 20);
+
+        document.addEventListener('keydown', e => {
+            if(e.key === 'ArrowUp') paddle1Y -= 10;
+            if(e.key === 'ArrowDown') paddle1Y += 10;
+            if(paddle1Y < 0) paddle1Y = 0;
+            if(paddle1Y > 300-paddleHeight) paddle1Y = 300-paddleHeight;
+        });
+
+        // -------- SNAKE GAME --------
+        const snakeCanvas = document.getElementById('snake');
+        const snakeCtx = snakeCanvas.getContext('2d');
+
+        let snakeSize = 20;
+        let snake = [{x:200,y:200}];
+        let food = {x: Math.floor(Math.random()*20)*snakeSize, y: Math.floor(Math.random()*20)*snakeSize};
+        let dx = snakeSize, dy = 0;
+
+        function snakeDraw() {
+            snakeCtx.clearRect(0,0,400,400);
+
+            // Draw food
+            snakeCtx.fillStyle = 'red';
+            snakeCtx.fillRect(food.x, food.y, snakeSize, snakeSize);
+
+            // Move snake
+            let head = {x: snake[0].x + dx, y: snake[0].y + dy};
+            snake.unshift(head);
+
+            // Eat food
+            if(head.x === food.x && head.y === food.y){
+                food = {x: Math.floor(Math.random()*20)*snakeSize, y: Math.floor(Math.random()*20)*snakeSize};
+            } else {
+                snake.pop();
+            }
+
+            // Draw snake
+            snakeCtx.fillStyle = 'green';
+            for(let part of snake){
+                snakeCtx.fillRect(part.x, part.y, snakeSize, snakeSize);
+            }
+
+            // Collision with walls or self
+            if(head.x < 0 || head.x >= 400 || head.y < 0 || head.y >= 400 || snake.slice(1).some(p=>p.x===head.x && p.y===head.y)){
+                snake = [{x:200,y:200}];
+                dx = snakeSize; dy = 0;
+            }
+        }
+
+        setInterval(snakeDraw, 100);
+
+        document.addEventListener('keydown', e => {
+            if(e.key === 'ArrowUp' && dy === 0){ dx=0; dy=-snakeSize; }
+            if(e.key === 'ArrowDown' && dy === 0){ dx=0; dy=snakeSize; }
+            if(e.key === 'ArrowLeft' && dx === 0){ dx=-snakeSize; dy=0; }
+            if(e.key === 'ArrowRight' && dx === 0){ dx=snakeSize; dy=0; }
+        });
+    </script>
 </body>
 </html>
