@@ -1,9 +1,33 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Test Page</title>
+    <title>Audio Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 100px;
+        }
+        button {
+            padding: 15px 30px;
+            font-size: 18px;
+            margin: 10px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
+
     <h1>working!</h1>
+    <h2>Music Player</h2>
+
+    <!-- Audio object -->
+    <audio id="music" src="music.mp3"></audio>
+
+    <!-- Buttons -->
+    <button onclick="document.getElementById('music').play()">Play</button>
+    <button onclick="document.getElementById('music').pause()">Pause</button>
+    <button onclick="document.getElementById('music').currentTime = 0">Restart</button>
+
 </body>
 </html>
